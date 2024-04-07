@@ -1,10 +1,10 @@
 [package]
-name = "monitormaster"
+name = "stereo_output_controller"
 version = "0.1.0"
 authors = ["Redward Collard <collardmusic@gmail.com>"]
 license = "GPLv3"
 
-description = "stereo-to-mono, monitor configuration and calibration, headphone crossfeed"
+description = "stereo-to-mono, headphone crossfeed"
 
 [lib]
 crate-type = ["cdylib"]

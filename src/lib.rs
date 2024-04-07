@@ -13,7 +13,7 @@ use std::sync::Arc;
 mod editor;
 mod process;
 
-pub struct MonitorMaster {
+pub struct SOC {
     params: Arc<MMParams>,
 }
 
@@ -30,7 +30,7 @@ struct MMParams {
     pub difftoggle: BoolParam,
 }
 
-impl Default for MonitorMaster {
+impl Default for SOC {
     fn default() -> Self {
         Self {
             params: Arc::new(MMParams::default()),
@@ -49,8 +49,8 @@ impl Default for MMParams {
     }
 }
 
-impl Plugin for MonitorMaster {
-    const NAME: &'static str = "MonitorMaster v.0";
+impl Plugin for SOC {
+    const NAME: &'static str = "Stereo Output Controller v.0";
     const VENDOR: &'static str = "Wirebender Audio";
     const URL: &'static str = "www.collardmusic.com";
     const EMAIL: &'static str = "collardmusic@gmail.com";
@@ -103,11 +103,10 @@ impl Plugin for MonitorMaster {
     }
 }
 
-impl ClapPlugin for MonitorMaster {
+impl ClapPlugin for SOC {
     const CLAP_ID: &'static str =
-        "wirebender audio monitormaster v.0 discrete symbol continuous syntax";
-    const CLAP_DESCRIPTION: Option<&'static str> =
-        Some("Stereo to mono, monitor configuration and calibration, headphone crossfeed");
+        "wirebender audio stereo output controller v.0 discrete symbol continuous syntax";
+    const CLAP_DESCRIPTION: Option<&'static str> = Some("Stereo to mono, headphone crossfeed");
     const CLAP_MANUAL_URL: Option<&'static str> = Some(Self::URL);
     const CLAP_SUPPORT_URL: Option<&'static str> = None;
     const CLAP_FEATURES: &'static [ClapFeature] = &[
@@ -118,11 +117,11 @@ impl ClapPlugin for MonitorMaster {
     ];
 }
 
-impl Vst3Plugin for MonitorMaster {
-    const VST3_CLASS_ID: [u8; 16] = *b"MonMast0Wirebend";
+impl Vst3Plugin for SOC {
+    const VST3_CLASS_ID: [u8; 16] = *b"StereoOutput_Ctl";
     const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] =
         &[Vst3SubCategory::Fx, Vst3SubCategory::Tools];
 }
 
-nih_export_clap!(MonitorMaster);
-nih_export_vst3!(MonitorMaster);
+nih_export_clap!(SOC);
+nih_export_vst3!(SOC);
