@@ -1,0 +1,19 @@
+[package]
+name = "monitormaster"
+version = "0.1.0"
+authors = ["Redward Collard <collardmusic@gmail.com>"]
+license = "GPLv3"
+
+description = "stereo-to-mono, monitor configuration and calibration, headphone crossfeed"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git" }
+nih_plug_vizia = { git = "https://github.com/robbert-vdh/nih-plug.git" }
+
+atomic_float = "0.1"
+
+[workspace]
+members = ["xtask"]
