@@ -7,11 +7,11 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::MMParams;
+use crate::SOCParams;
 
 #[derive(Lens)]
 struct Data {
-    params: Arc<MMParams>,
+    params: Arc<SOCParams>,
 }
 
 impl Model for Data {}
@@ -22,7 +22,7 @@ pub(crate) fn default_state() -> Arc<ViziaState> {
 }
 
 pub(crate) fn create(
-    params: Arc<MMParams>,
+    params: Arc<SOCParams>,
     editor_state: Arc<ViziaState>,
 ) -> Option<Box<dyn Editor>> {
     create_vizia_editor(editor_state, ViziaTheming::Custom, move |cx, _| {
@@ -36,7 +36,7 @@ pub(crate) fn create(
         .build(cx);
 
         VStack::new(cx, |cx| {
-            Label::new(cx, "Monitor Master")
+            Label::new(cx, "Stereo Output Controller")
                 .font_family(vec![FamilyOwned::Name(String::from(assets::NOTO_SANS))])
                 .font_weight(FontWeightKeyword::Thin)
                 .font_size(26.0)
@@ -46,10 +46,8 @@ pub(crate) fn create(
 
             Label::new(cx, "Stereo/Mono");
             ParamButton::new(cx, Data::params, |params| &params.monotoggle).with_label("Mono");
-            Label::new(cx, "Sum/Diff");
-            ParamButton::new(cx, Data::params, |params| &params.difftoggle).with_label("Diff");
-        })
-        .row_between(Pixels(0.0))
+            Label::new(cx, "Mono Mode");
+            ParamSlider::new(cx, Data::params, |params| &params.monomode);
         .child_left(Stretch(1.0))
         .child_right(Stretch(1.0));
 

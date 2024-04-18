@@ -14,11 +14,11 @@ mod editor;
 mod process;
 
 pub struct SOC {
-    params: Arc<MMParams>,
+    params: Arc<SOCParams>,
 }
 
 #[derive(Params)]
-struct MMParams {
+struct SOCParams {
     /// The editor state, saved together with the parameter state so the custom scaling can be
     /// restored.
     #[persist = "editor-state"]
@@ -26,25 +26,41 @@ struct MMParams {
 
     #[id = "MonoToggle"]
     pub monotoggle: BoolParam,
-    #[id = "DiffToggle"]
-    pub difftoggle: BoolParam,
+    #[id = "MonoMode"]
+    pub monomode: EnumParam<MonoMode>
+}
+
+#[derive(Enum, Debug, PartialEq)]
+pub enum MonoMode {
+    #[id="L"]
+    Left,
+    #[id="LL"]
+    LeftLeft,
+    #[id="L+R"]
+    LeftRightSum,
+    #[id="L-R"]
+    LeftRightDiff,
+    #[id="RR"]
+    RightRight,
+    #[id="R"]
+    Right
 }
 
 impl Default for SOC {
     fn default() -> Self {
         Self {
-            params: Arc::new(MMParams::default()),
+            params: Arc::new(SOCParams::default()),
         }
     }
 }
 
-impl Default for MMParams {
+impl Default for SOCParams {
     fn default() -> Self {
         Self {
             editor_state: editor::default_state(),
 
             monotoggle: BoolParam::new("Mono", false),
-            difftoggle: BoolParam::new("Mono", false),
+            monomode: EnumParam::new("MonoMode", MonoMode::LeftRightSum)
         }
     }
 }
@@ -93,11 +109,15 @@ impl Plugin for SOC {
     ) -> ProcessStatus {
         match (
             self.params.monotoggle.value(),
-            self.params.difftoggle.value(),
+            self.params.monomode.value(),
         ) {
             (false, _) => (),
-            (true, false) => process::sum_mono(buffer),
-            (true, true) => process::diff_mono(buffer),
+            (true, MonoMode::Left) => process::left_only(buffer),
+            (true, MonoMode::LeftLeft) => process::left_left(buffer),
+            (true, MonoMode::LeftRightSum) => process::sum_mono(buffer),
+            (true, MonoMode::LeftRightDiff) => process::diff_mono(buffer),
+            (true, MonoMode::Right) => process::right_only(buffer),
+            (true, MonoMode::RightRight) => process::right_right(buffer),
         }
         ProcessStatus::Normal
     }
