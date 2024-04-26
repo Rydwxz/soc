@@ -1,5 +1,5 @@
 [package]
-name = "stereo_output_controller"
+name = "soc"
 version = "0.1.0"
 authors = ["Redward Collard <collardmusic@gmail.com>"]
 license = "GPLv3"

@@ -42,3 +42,7 @@ pub fn right_only(buf: &mut Buffer) {
 pub fn right_right(buf: &mut Buffer) {
 
 }
+
+pub fn phono_mtx(buf: &mut Buffer, cf_l: FloatParam, cf_d: FloatParam) {
+
+}

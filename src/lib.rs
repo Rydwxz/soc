@@ -24,14 +24,21 @@ struct SOCParams {
     #[persist = "editor-state"]
     editor_state: Arc<ViziaState>,
 
-    #[id = "MonoToggle"]
-    pub monotoggle: BoolParam,
     #[id = "MonoMode"]
-    pub monomode: EnumParam<MonoMode>
+    pub monomode: EnumParam<MonoMode>,
+    #[id = "PhonoToggle"]
+    pub phonotoggle: BoolParam,
+    #[id = "CrossFeed Level"]
+    pub cf_level: FloatParam,
+    #[id = "CrossFeed Delay"]
+    pub cf_spread: FloatParam,
+
 }
 
 #[derive(Enum, Debug, PartialEq)]
 pub enum MonoMode {
+    #[id="LR"]
+    LeftRight,
     #[id="L"]
     Left,
     #[id="LL"]
@@ -58,9 +65,10 @@ impl Default for SOCParams {
     fn default() -> Self {
         Self {
             editor_state: editor::default_state(),
-
-            monotoggle: BoolParam::new("Mono", false),
-            monomode: EnumParam::new("MonoMode", MonoMode::LeftRightSum)
+            monomode: EnumParam::new("MonoMode", MonoMode::LeftRightSum),
+            phonotoggle: BoolParam::new("Phono Phantom Center", false),
+            cf_level: FloatParam::new("Crossfeed Level", 1.0), // toto find better defaults
+            cf_delay: FloatParam::new("Crossfeed Delay", 1.0), // for both of these
         }
     }
 }
@@ -107,17 +115,17 @@ impl Plugin for SOC {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        match (
-            self.params.monotoggle.value(),
-            self.params.monomode.value(),
-        ) {
-            (false, _) => (),
-            (true, MonoMode::Left) => process::left_only(buffer),
-            (true, MonoMode::LeftLeft) => process::left_left(buffer),
-            (true, MonoMode::LeftRightSum) => process::sum_mono(buffer),
-            (true, MonoMode::LeftRightDiff) => process::diff_mono(buffer),
-            (true, MonoMode::Right) => process::right_only(buffer),
-            (true, MonoMode::RightRight) => process::right_right(buffer),
+        match (self.params.phonotoggle.value()) {
+            true => process::phono_mtx(buffer), // todo add params
+            false => match (self.params.monomode.value()) {
+                MonoMode::LeftRight => (),
+                MonoMode::Left => process::left_only(buffer),
+                MonoMode::LeftLeft => process::left_left(buffer),
+                MonoMode::LeftRightSum => process::sum_mono(buffer),
+                MonoMode::LeftRightDiff => process::diff_mono(buffer),
+                MonoMode::Right => process::right_only(buffer),
+                MonoMode::RightRight => process::right_right(buffer),
+            }
         }
         ProcessStatus::Normal
     }
