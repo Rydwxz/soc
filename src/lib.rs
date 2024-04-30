@@ -14,37 +14,61 @@ mod editor;
 mod process;
 
 pub struct SOC {
-    params: Arc<MMParams>,
+    params: Arc<SOCParams>,
 }
 
 #[derive(Params)]
-struct MMParams {
+struct SOCParams {
     /// The editor state, saved together with the parameter state so the custom scaling can be
     /// restored.
     #[persist = "editor-state"]
     editor_state: Arc<ViziaState>,
 
-    #[id = "MonoToggle"]
-    pub monotoggle: BoolParam,
-    #[id = "DiffToggle"]
-    pub difftoggle: BoolParam,
+    #[id = "MonoMode"]
+    pub monomode: EnumParam<MonoMode>,
+    #[id = "PhonoToggle"]
+    pub phonotoggle: BoolParam,
+    #[id = "CrossFeed Level"]
+    pub cf_level: FloatParam,
+    #[id = "CrossFeed Delay"]
+    pub cf_spread: FloatParam,
+
+}
+
+#[derive(Enum, Debug, PartialEq)]
+pub enum MonoMode {
+    #[id="LR"]
+    LeftRight,
+    #[id="L"]
+    Left,
+    #[id="LL"]
+    LeftLeft,
+    #[id="L+R"]
+    LeftRightSum,
+    #[id="L-R"]
+    LeftRightDiff,
+    #[id="RR"]
+    RightRight,
+    #[id="R"]
+    Right
 }
 
 impl Default for SOC {
     fn default() -> Self {
         Self {
-            params: Arc::new(MMParams::default()),
+            params: Arc::new(SOCParams::default()),
         }
     }
 }
 
-impl Default for MMParams {
+impl Default for SOCParams {
     fn default() -> Self {
         Self {
             editor_state: editor::default_state(),
-
-            monotoggle: BoolParam::new("Mono", false),
-            difftoggle: BoolParam::new("Mono", false),
+            monomode: EnumParam::new("MonoMode", MonoMode::LeftRightSum),
+            phonotoggle: BoolParam::new("Phono Phantom Center", false),
+            cf_level: FloatParam::new("Crossfeed Level", 1.0), // toto find better defaults
+            cf_delay: FloatParam::new("Crossfeed Delay", 1.0), // for both of these
         }
     }
 }
@@ -91,13 +115,17 @@ impl Plugin for SOC {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        match (
-            self.params.monotoggle.value(),
-            self.params.difftoggle.value(),
-        ) {
-            (false, _) => (),
-            (true, false) => process::sum_mono(buffer),
-            (true, true) => process::diff_mono(buffer),
+        match (self.params.phonotoggle.value()) {
+            true => process::phono_mtx(buffer), // todo add params
+            false => match (self.params.monomode.value()) {
+                MonoMode::LeftRight => (),
+                MonoMode::Left => process::left_only(buffer),
+                MonoMode::LeftLeft => process::left_left(buffer),
+                MonoMode::LeftRightSum => process::sum_mono(buffer),
+                MonoMode::LeftRightDiff => process::diff_mono(buffer),
+                MonoMode::Right => process::right_only(buffer),
+                MonoMode::RightRight => process::right_right(buffer),
+            }
         }
         ProcessStatus::Normal
     }

@@ -24,3 +24,25 @@ pub fn diff_mono(buf: &mut Buffer) {
         }
     }
 }
+
+pub fn left_only(buf: &mut Buffer) {
+    for mut chan_samps in buf.iter_samples() {
+        chan_samps.get_mut(1).expect("Incorrect buffer access") = 0.0;
+    }
+}
+
+pub fn left_left(buf: &mut Buffer) {
+
+}
+
+pub fn right_only(buf: &mut Buffer) {
+
+}
+
+pub fn right_right(buf: &mut Buffer) {
+
+}
+
+pub fn phono_mtx(buf: &mut Buffer, cf_l: FloatParam, cf_d: FloatParam) {
+
+}
