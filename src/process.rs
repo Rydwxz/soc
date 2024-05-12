@@ -1,3 +1,5 @@
+use core::f32;
+
 use nih_plug::prelude::*;
 
 pub fn sum_mono(buf: &mut Buffer) {
@@ -27,22 +29,45 @@ pub fn diff_mono(buf: &mut Buffer) {
 
 pub fn left_only(buf: &mut Buffer) {
     for mut chan_samps in buf.iter_samples() {
-        chan_samps.get_mut(1).expect("Incorrect buffer access") = 0.0;
+        *chan_samps.get_mut(1).unwrap() = 0.0;
     }
 }
 
 pub fn left_left(buf: &mut Buffer) {
-
+    for mut chan_samps in buf.iter_samples() {
+        *chan_samps.get_mut(1).unwrap() = *chan_samps.get_mut(0).unwrap();
+    }
 }
 
 pub fn right_only(buf: &mut Buffer) {
-
+    for mut chan_samps in buf.iter_samples() {
+        *chan_samps.get_mut(0).unwrap() = 0.0;
+    }
 }
 
 pub fn right_right(buf: &mut Buffer) {
+    for mut chan_samps in buf.iter_samples() {
+        *chan_samps.get_mut(0).unwrap() = *chan_samps.get_mut(1).unwrap();
+    }
+}
+
+pub fn phono_mtx(buf: &mut Buffer, cf_l: f32, cf_d: f32) {
 
 }
 
-pub fn phono_mtx(buf: &mut Buffer, cf_l: FloatParam, cf_d: FloatParam) {
+pub fn balance(buf: &mut Buffer, bal: f32) {
+    let mut idx = 0;
+    if bal = 0 {return;}
+    else if bal < 0 {
+        bal = bal * -1;
+        idx = 1;
+    }
+    for mut chan_samps in buf.iter_samples() {
+        scale(chan_samps.get_mut(idx).unwrap(), bal);
+    }
+}
 
+fn scale(input: &f32, s: f32)  {
+    //*input - *input * s
+    *input * (1 - s)
 }

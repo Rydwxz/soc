@@ -31,7 +31,7 @@ struct SOCParams {
     #[id = "CrossFeed Level"]
     pub cf_level: FloatParam,
     #[id = "CrossFeed Delay"]
-    pub cf_spread: FloatParam,
+    pub cf_delay: FloatParam,
 
 }
 
@@ -67,7 +67,7 @@ impl Default for SOCParams {
             editor_state: editor::default_state(),
             monomode: EnumParam::new("MonoMode", MonoMode::LeftRightSum),
             phonotoggle: BoolParam::new("Phono Phantom Center", false),
-            cf_level: FloatParam::new("Crossfeed Level", 1.0), // toto find better defaults
+            cf_level: FloatParam::new("Crossfeed Level", 1.0), // todo find better defaults
             cf_delay: FloatParam::new("Crossfeed Delay", 1.0), // for both of these
         }
     }
@@ -102,11 +102,13 @@ impl Plugin for SOC {
 
     fn initialize(
         &mut self,
-        _audio_io_layout: &AudioIOLayout,
-        buffer_config: &BufferConfig,
+        audio_io_layout: &AudioIOLayout,
+        _buffer_config: &BufferConfig,
         _context: &mut impl InitContext<Self>,
     ) -> bool {
-        true
+        if audio_io_layout.main_input_channels.expect("no input channels") != NonZeroU32::new(2).unwrap()
+        {false}
+        else {true}
     }
 
     fn process(
@@ -115,9 +117,9 @@ impl Plugin for SOC {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        match (self.params.phonotoggle.value()) {
-            true => process::phono_mtx(buffer), // todo add params
-            false => match (self.params.monomode.value()) {
+        match self.params.phonotoggle.value() {
+            true => process::phono_mtx(buffer, self.params.cf_level.value(), self.params.cf_delay.value()), // todo add params
+            false => match self.params.monomode.value() {
                 MonoMode::LeftRight => (),
                 MonoMode::Left => process::left_only(buffer),
                 MonoMode::LeftLeft => process::left_left(buffer),
