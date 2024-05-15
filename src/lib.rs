@@ -68,7 +68,7 @@ impl Default for SOCParams {
             monomode: EnumParam::new("MonoMode", MonoMode::LeftRightSum),
             phonotoggle: BoolParam::new("Phono Phantom Center", false),
             cf_level: FloatParam::new("Crossfeed Level", 1.0), // todo find better defaults
-            cf_delay: FloatParam::new("Crossfeed Delay", 1.0), // for both of these
+            cf_delay: FloatParam::new("Crossfeed Delay", 1.0, ), // for both of these
         }
     }
 }
@@ -106,6 +106,7 @@ impl Plugin for SOC {
         _buffer_config: &BufferConfig,
         _context: &mut impl InitContext<Self>,
     ) -> bool {
+        // todo init a buffer for cf_delay
         if audio_io_layout.main_input_channels.expect("no input channels") != NonZeroU32::new(2).unwrap()
         {false}
         else {true}

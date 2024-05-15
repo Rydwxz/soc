@@ -1,4 +1,4 @@
-use core::f32;
+use std::f32;
 
 use nih_plug::prelude::*;
 
@@ -62,12 +62,11 @@ pub fn balance(buf: &mut Buffer, bal: f32) {
         bal = bal * -1;
         idx = 1;
     }
-    for mut chan_samps in buf.iter_samples() {
+    buf.iter_samples().map(|chan_samps| {
         scale(chan_samps.get_mut(idx).unwrap(), bal);
-    }
+    });
 }
 
-fn scale(input: &f32, s: f32)  {
-    //*input - *input * s
-    *input * (1 - s)
+fn scale(inp: &f32, s: f32)  {
+    *inp = *inp * (1 - s)
 }
