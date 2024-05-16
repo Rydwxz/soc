@@ -4,14 +4,13 @@ extern crate nih_plug_vizia;
 
 use atomic_float::AtomicF32;
 use nih_plug::{
-    prelude::*,
-    wrapper::vst3::vst3_sys::vst::{Sample32, Sample64},
+    context::process, prelude::*, wrapper::vst3::vst3_sys::vst::{Sample32, Sample64}
 };
 use nih_plug_vizia::ViziaState;
 use std::sync::Arc;
 
 mod editor;
-mod process;
+mod proc;
 
 pub struct SOC {
     params: Arc<SOCParams>,
@@ -32,6 +31,8 @@ struct SOCParams {
     pub cf_level: FloatParam,
     #[id = "CrossFeed Delay"]
     pub cf_delay: FloatParam,
+    #[id = "Channel Balance"]
+    pub balance: FloatParam,
 
 }
 
@@ -67,8 +68,9 @@ impl Default for SOCParams {
             editor_state: editor::default_state(),
             monomode: EnumParam::new("MonoMode", MonoMode::LeftRightSum),
             phonotoggle: BoolParam::new("Phono Phantom Center", false),
-            cf_level: FloatParam::new("Crossfeed Level", 1.0), // todo find better defaults
-            cf_delay: FloatParam::new("Crossfeed Delay", 1.0, ), // for both of these
+            cf_level: FloatParam::new("Crossfeed Level", 1.0, FloatRange::Linear{min:-0.25,max:0.25}), // todo find better defaults
+            cf_delay: FloatParam::new("Crossfeed Delay", 1.0, FloatRange::Linear{min:-0.25,max:0.25}), // for both of these
+            balance: FloatParam::new("Balance", 0.0, FloatRange::Linear{min:-0.25,max:0.25})
         }
     }
 }
@@ -119,17 +121,19 @@ impl Plugin for SOC {
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
         match self.params.phonotoggle.value() {
-            true => process::phono_mtx(buffer, self.params.cf_level.value(), self.params.cf_delay.value()), // todo add params
+            true => proc::phono_mtx(buffer, self.params.cf_level.value(), self.params.cf_delay.value()),
             false => match self.params.monomode.value() {
                 MonoMode::LeftRight => (),
-                MonoMode::Left => process::left_only(buffer),
-                MonoMode::LeftLeft => process::left_left(buffer),
-                MonoMode::LeftRightSum => process::sum_mono(buffer),
-                MonoMode::LeftRightDiff => process::diff_mono(buffer),
-                MonoMode::Right => process::right_only(buffer),
-                MonoMode::RightRight => process::right_right(buffer),
+                MonoMode::Left => proc::left_only(buffer),
+                MonoMode::LeftLeft => proc::left_left(buffer),
+                MonoMode::LeftRightSum => proc::sum_mono(buffer),
+                MonoMode::LeftRightDiff => proc::diff_mono(buffer),
+                MonoMode::Right => proc::right_only(buffer),
+                MonoMode::RightRight => proc::right_right(buffer),
             }
         }
+        proc::balance(buffer, self.params.balance.value());
+
         ProcessStatus::Normal
     }
 }

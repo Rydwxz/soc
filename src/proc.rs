@@ -57,9 +57,9 @@ pub fn phono_mtx(buf: &mut Buffer, cf_l: f32, cf_d: f32) {
 
 pub fn balance(buf: &mut Buffer, bal: f32) {
     let mut idx = 0;
-    if bal = 0 {return;}
+    if bal == 0.0 {return;}
     else if bal < 0 {
-        bal = bal * -1;
+        bal = bal * -1.0;
         idx = 1;
     }
     buf.iter_samples().map(|chan_samps| {
@@ -67,6 +67,6 @@ pub fn balance(buf: &mut Buffer, bal: f32) {
     });
 }
 
-fn scale(inp: &f32, s: f32)  {
-    *inp = *inp * (1 - s)
+fn scale(inp: &mut f32, s: f32)  {
+    *inp = *inp * (1.0 - s)
 }

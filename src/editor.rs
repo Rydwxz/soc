@@ -46,8 +46,8 @@ pub(crate) fn create(
 
             Label::new(cx, "Stereo/Mono");
             ParamButton::new(cx, Data::params, |params| &params.monomode).with_label("Mono");
-            Label::new(cx, "Mono Mode");
-            ParamSlider::new(cx, Data::params, |params| &params.monomode);
+            Label::new(cx, "Channel Balance");
+            ParamSlider::new(cx, Data::params, |params| &params.balance);
         })
         .child_left(Stretch(1.0))
         .child_right(Stretch(1.0));
