@@ -4,16 +4,20 @@ extern crate nih_plug_vizia;
 
 use atomic_float::AtomicF32;
 use nih_plug::{
-    context::process, prelude::*, wrapper::vst3::vst3_sys::vst::{Sample32, Sample64}
+    context::process,
+    prelude::*,
+    wrapper::vst3::vst3_sys::vst::{Sample32, Sample64},
 };
-use nih_plug_vizia::ViziaState;
+use nih_plug_vizia::{vizia::views::normalized_map::DecibelMap, ViziaState};
 use std::sync::Arc;
 
+mod buffer;
 mod editor;
 mod proc;
 
 pub struct SOC {
     params: Arc<SOCParams>,
+    del_buf: DelayBuffer,
 }
 
 #[derive(Params)]
@@ -24,40 +28,42 @@ struct SOCParams {
     editor_state: Arc<ViziaState>,
 
     #[id = "MonoMode"]
-    pub monomode: EnumParam<MonoMode>,
-    #[id = "PhonoToggle"]
-    pub phonotoggle: BoolParam,
+    pub monomode: EnumParam<OutputMode>,
     #[id = "CrossFeed Level"]
     pub cf_level: FloatParam,
     #[id = "CrossFeed Delay"]
     pub cf_delay: FloatParam,
     #[id = "Channel Balance"]
     pub balance: FloatParam,
-
 }
 
 #[derive(Enum, Debug, PartialEq)]
-pub enum MonoMode {
-    #[id="LR"]
+pub enum OutputMode {
+    #[id = "LR"]
     LeftRight,
-    #[id="L"]
+    #[id = "L"]
     Left,
-    #[id="LL"]
+    #[id = "LL"]
     LeftLeft,
-    #[id="L+R"]
+    #[id = "L+R"]
     LeftRightSum,
-    #[id="L-R"]
+    #[id = "L-R"]
     LeftRightDiff,
-    #[id="RR"]
+    #[id = "RR"]
     RightRight,
-    #[id="R"]
-    Right
+    #[id = "R"]
+    Right,
+    #[id = "CF"]
+    Crossfeed,
+    #[id = "BAL"]
+    Balance,
 }
 
 impl Default for SOC {
     fn default() -> Self {
         Self {
             params: Arc::new(SOCParams::default()),
+            del_buf: DelayBuffer::default(),
         }
     }
 }
@@ -66,11 +72,31 @@ impl Default for SOCParams {
     fn default() -> Self {
         Self {
             editor_state: editor::default_state(),
-            monomode: EnumParam::new("MonoMode", MonoMode::LeftRightSum),
-            phonotoggle: BoolParam::new("Phono Phantom Center", false),
-            cf_level: FloatParam::new("Crossfeed Level", 1.0, FloatRange::Linear{min:-0.25,max:0.25}), // todo find better defaults
-            cf_delay: FloatParam::new("Crossfeed Delay", 1.0, FloatRange::Linear{min:-0.25,max:0.25}), // for both of these
-            balance: FloatParam::new("Balance", 0.0, FloatRange::Linear{min:-0.25,max:0.25})
+            monomode: EnumParam::new("MonoMode", OutputMode::LeftRightSum),
+            cf_level: FloatParam::new(
+                "Crossfeed Level",
+                1.0,
+                FloatRange::Linear {
+                    min: -0.25,
+                    max: 0.25,
+                },
+            ), // todo find better defaults
+            cf_delay: FloatParam::new(
+                "Crossfeed Delay",
+                1.0,
+                FloatRange::Linear {
+                    min: -0.25,
+                    max: 0.25,
+                },
+            ), // for both of these
+            balance: FloatParam::new(
+                "Balance",
+                0.0,
+                FloatRange::Linear {
+                    min: -0.25,
+                    max: 0.25,
+                },
+            ),
         }
     }
 }
@@ -109,9 +135,16 @@ impl Plugin for SOC {
         _context: &mut impl InitContext<Self>,
     ) -> bool {
         // todo init a buffer for cf_delay
-        if audio_io_layout.main_input_channels.expect("no input channels") != NonZeroU32::new(2).unwrap()
-        {false}
-        else {true}
+        self.del_buf.init();
+        if audio_io_layout
+            .main_input_channels
+            .expect("no input channels")
+            != NonZeroU32::new(2).unwrap()
+        {
+            false
+        } else {
+            true
+        }
     }
 
     fn process(
@@ -120,19 +153,23 @@ impl Plugin for SOC {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        match self.params.phonotoggle.value() {
-            true => proc::phono_mtx(buffer, self.params.cf_level.value(), self.params.cf_delay.value()),
-            false => match self.params.monomode.value() {
-                MonoMode::LeftRight => (),
-                MonoMode::Left => proc::left_only(buffer),
-                MonoMode::LeftLeft => proc::left_left(buffer),
-                MonoMode::LeftRightSum => proc::sum_mono(buffer),
-                MonoMode::LeftRightDiff => proc::diff_mono(buffer),
-                MonoMode::Right => proc::right_only(buffer),
-                MonoMode::RightRight => proc::right_right(buffer),
-            }
+        use crate::proc;
+        match self.params.monomode.value() {
+            OutputMode::LeftRight => (),
+            OutputMode::Left => left_only(buffer),
+            OutputMode::LeftLeft => left_left(buffer),
+            OutputMode::LeftRightSum => sum_mono(buffer),
+            OutputMode::LeftRightDiff => diff_mono(buffer),
+            OutputMode::Right => right_only(buffer),
+            OutputMode::RightRight => right_right(buffer),
+            OutputMode::Crossfeed => crossfeed(
+                buffer,
+                self.params.cf_level,
+                self.params.cf_delay,
+                self.del_buf,
+            ),
+            OutputMode::Balance => balance(buffer, self.params.balance.value()),
         }
-        proc::balance(buffer, self.params.balance.value());
 
         ProcessStatus::Normal
     }
@@ -157,6 +194,6 @@ impl Vst3Plugin for SOC {
     const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] =
         &[Vst3SubCategory::Fx, Vst3SubCategory::Tools];
 }
-
+fn fun_func() {}
 nih_export_clap!(SOC);
 nih_export_vst3!(SOC);

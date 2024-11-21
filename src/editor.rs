@@ -44,8 +44,18 @@ pub(crate) fn create(
                 .child_top(Stretch(1.0))
                 .child_bottom(Pixels(0.0));
 
-            Label::new(cx, "Stereo/Mono");
-            ParamButton::new(cx, Data::params, |params| &params.monomode).with_label("Mono");
+            HStack::new(cx, |cx| {
+                // this widget won't work: it's designed to only work with BoolParam
+                ParamButton::new(cx, Data::params, |params| &params.monomode).with_label("L");
+                ParamButton::new(cx, Data::params, |params| &params.monomode).with_label("LL");
+                VStack::new(cx, |cx| {
+                    ParamButton::new(cx, Data::params, |params| &params.monomode).with_label("L+R");
+                    ParamButton::new(cx, Data::params, |params| &params.monomode).with_label("LR");
+                    ParamButton::new(cx, Data::params, |params| &params.monomode).with_label("L-R");
+                });
+                ParamButton::new(cx, Data::params, |params| &params.monomode).with_label("RR");
+                ParamButton::new(cx, Data::params, |params| &params.monomode).with_label("R");
+            });
             Label::new(cx, "Channel Balance");
             ParamSlider::new(cx, Data::params, |params| &params.balance);
         })
