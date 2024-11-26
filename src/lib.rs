@@ -17,7 +17,7 @@ mod proc;
 
 pub struct SOC {
     params: Arc<SOCParams>,
-    del_buf: DelayBuffer,
+    // del_buf: DelayBuffer,
 }
 
 #[derive(Params)]
@@ -28,7 +28,7 @@ struct SOCParams {
     editor_state: Arc<ViziaState>,
 
     #[id = "MonoMode"]
-    pub monomode: EnumParam<OutputMode>,
+    pub output_mode: EnumParam<OutputMode>,
     #[id = "CrossFeed Level"]
     pub cf_level: FloatParam,
     #[id = "CrossFeed Delay"]
@@ -63,7 +63,7 @@ impl Default for SOC {
     fn default() -> Self {
         Self {
             params: Arc::new(SOCParams::default()),
-            del_buf: DelayBuffer::default(),
+            // del_buf: DelayBuffer::default(),
         }
     }
 }
@@ -72,7 +72,7 @@ impl Default for SOCParams {
     fn default() -> Self {
         Self {
             editor_state: editor::default_state(),
-            monomode: EnumParam::new("MonoMode", OutputMode::LeftRightSum),
+            output_mode: EnumParam::new("MonoMode", OutputMode::LeftRightSum),
             cf_level: FloatParam::new(
                 "Crossfeed Level",
                 1.0,
@@ -135,7 +135,7 @@ impl Plugin for SOC {
         _context: &mut impl InitContext<Self>,
     ) -> bool {
         // todo init a buffer for cf_delay
-        self.del_buf.init();
+        // self.del_buf.init();
         if audio_io_layout
             .main_input_channels
             .expect("no input channels")
@@ -153,8 +153,8 @@ impl Plugin for SOC {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        use crate::proc;
-        match self.params.monomode.value() {
+        use crate::proc::*;
+        match self.params.output_mode.value() {
             OutputMode::LeftRight => (),
             OutputMode::Left => left_only(buffer),
             OutputMode::LeftLeft => left_left(buffer),
@@ -164,9 +164,9 @@ impl Plugin for SOC {
             OutputMode::RightRight => right_right(buffer),
             OutputMode::Crossfeed => crossfeed(
                 buffer,
-                self.params.cf_level,
-                self.params.cf_delay,
-                self.del_buf,
+                self.params.cf_level.value(),
+                self.params.cf_delay.value(),
+                // self.del_buf,
             ),
             OutputMode::Balance => balance(buffer, self.params.balance.value()),
         }

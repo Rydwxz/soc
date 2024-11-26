@@ -53,7 +53,7 @@ pub fn right_right(buf: &mut Buffer) {
 
 // this function will mix small amounts of each audio channel into the other according to cf_l
 // todo implement cf_delay
-pub fn crossfeed(buf: &mut Buffer, cf_l: f32, cf_d: f32, del: DelayBuffer) {
+pub fn crossfeed(buf: &mut Buffer, cf_l: f32, cf_d: f32) {
     // let del = del.
     // let _ = buf.iter_samples().zip(del.iter_samples(cf_d))
     //     .map(|mut chans, delchan| {
