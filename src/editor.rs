@@ -24,8 +24,8 @@ impl Model for Data {
         event.map(|app_event, meta| {
             match app_event {
                 AppEvent::RBevent(outmode) => Data::params.map(|p| {
-                    let om = p.output_mode. ();
-                    *om = outmode;
+                    // let om = p.output_mode. ();
+                    // *om = outmode;
                 }),
             };
         })
@@ -64,15 +64,13 @@ pub(crate) fn create(
                 .child_top(Stretch(1.0))
                 .child_bottom(Pixels(0.0));
 
-            use crate::OutputMode;
             HStack::new(cx, |cx| {
                 Button::new(
                     cx,
                     |ex| ex.emit(AppEvent::RBevent(OutputMode::Left)),
                     |cx| Label::new(cx, "L"),
                 )
-                .class("radio-button")
-                .background_color(button_color(OutputMode::Left));
+                .class("radio-button");
                 VStack::new(cx, |cx| {
                     Button::new(cx, |_| {}, |cx| Label::new(cx, "")).class("radio-button");
                     Button::new(
@@ -87,7 +85,12 @@ pub(crate) fn create(
                         |cx| Label::new(cx, "CF"),
                     )
                     .class("radio-button");
-                });
+                })
+                .child_space(Stretch(1.))
+                .child_top(Stretch(1.))
+                .child_bottom(Stretch(1.))
+                .child_left(Stretch(1.))
+                .child_right(Stretch(1.));
                 VStack::new(cx, |cx| {
                     Button::new(
                         cx,
@@ -107,7 +110,12 @@ pub(crate) fn create(
                         |cx| Label::new(cx, "L-R"),
                     )
                     .class("radio-button");
-                });
+                })
+                .child_space(Stretch(1.))
+                .child_top(Stretch(1.))
+                .child_bottom(Stretch(1.))
+                .child_left(Stretch(1.))
+                .child_right(Stretch(1.));
                 VStack::new(cx, |cx| {
                     Button::new(cx, |_| {}, |cx| Label::new(cx, "")).class("radio-button");
                     Button::new(
@@ -122,30 +130,43 @@ pub(crate) fn create(
                         |cx| Label::new(cx, "Bal"),
                     )
                     .class("radio-button");
-                });
+                })
+                .child_space(Stretch(1.))
+                .child_top(Stretch(1.))
+                .child_bottom(Stretch(1.))
+                .child_left(Stretch(1.))
+                .child_right(Stretch(1.));
                 Button::new(
                     cx,
                     |ex| ex.emit(AppEvent::RBevent(OutputMode::Right)),
                     |cx| Label::new(cx, "R"),
                 )
                 .class("radio-button");
-            });
+            })
+            .child_space(Stretch(1.0));
+            // .child_top(Stretch(1.))
+            // .child_bottom(Stretch(1.))
+            // .child_left(Stretch(1.))
+            // .child_right(Stretch(1.));
             // Label::new(cx, "Channel Balance");
             // ParamSlider::new(cx, Data::params, |params| &params.balance);
-        })
-        .child_left(Stretch(1.0))
-        .child_right(Stretch(1.0));
+        });
+        // .child_space(Stretch(0.5));
+        // .child_top(Stretch(0.5))
+        // .child_bottom(Stretch(0.5))
+        // .child_left(Stretch(1.0))
+        // .child_right(Stretch(1.0));
 
         ResizeHandle::new(cx);
     })
 }
 
-impl Data {
-    fn button_color(&self, mode: OutputMode) -> Color {
-        if mode == Data::params.map(|p| p.output_mode.value()) {
-            ACTIVE_BGC
-        } else {
-            INACTIVE_BGC
-        }
-    }
-}
+// impl Data {
+//     fn button_color(&self, mode: OutputMode) -> Color {
+//         if mode == Data::params.map(|p| p.output_mode.value()) {
+//             ACTIVE_BGC
+//         } else {
+//             INACTIVE_BGC
+//         }
+//     }
+// }
