@@ -144,18 +144,7 @@ pub(crate) fn create(
                 .class("radio-button");
             })
             .child_space(Stretch(1.0));
-            // .child_top(Stretch(1.))
-            // .child_bottom(Stretch(1.))
-            // .child_left(Stretch(1.))
-            // .child_right(Stretch(1.));
-            // Label::new(cx, "Channel Balance");
-            // ParamSlider::new(cx, Data::params, |params| &params.balance);
         });
-        // .child_space(Stretch(0.5));
-        // .child_top(Stretch(0.5))
-        // .child_bottom(Stretch(0.5))
-        // .child_left(Stretch(1.0))
-        // .child_right(Stretch(1.0));
 
         ResizeHandle::new(cx);
     })
