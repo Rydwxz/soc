@@ -17,6 +17,13 @@ mod proc;
 
 pub struct SOC {
     params: Arc<SOCParams>,
+    cf: CrossFeed,
+}
+
+struct CrossFeed {
+    level: f32,
+    delay: f32,
+    filter: usize,
     // del_buf: DelayBuffer,
 }
 
@@ -29,10 +36,10 @@ struct SOCParams {
 
     #[id = "MonoMode"]
     pub output_mode: EnumParam<OutputMode>,
-    #[id = "CrossFeed Level"]
-    pub cf_level: FloatParam,
-    #[id = "CrossFeed Delay"]
-    pub cf_delay: FloatParam,
+    #[id = "CrossFeed Width"]
+    pub cf_width: FloatParam,
+    #[id = "CrossFeed Distance"]
+    pub cf_distance: FloatParam,
     #[id = "Channel Balance"]
     pub balance: FloatParam,
 }
@@ -63,7 +70,18 @@ impl Default for SOC {
     fn default() -> Self {
         Self {
             params: Arc::new(SOCParams::default()),
+            cf: CrossFeed::default(),
             // del_buf: DelayBuffer::default(),
+        }
+    }
+}
+
+impl Default for CrossFeed {
+    fn default() -> Self {
+        Self {
+            level: -12.0,
+            delay: 6.0,
+            filter: 0,
         }
     }
 }
@@ -73,16 +91,16 @@ impl Default for SOCParams {
         Self {
             editor_state: editor::default_state(),
             output_mode: EnumParam::new("MonoMode", OutputMode::LeftRightSum),
-            cf_level: FloatParam::new(
-                "Crossfeed Level",
+            cf_width: FloatParam::new(
+                "Crossfeed Width",
                 1.0,
                 FloatRange::Linear {
                     min: -0.25,
                     max: 0.25,
                 },
             ), // todo find better defaults
-            cf_delay: FloatParam::new(
-                "Crossfeed Delay",
+            cf_distance: FloatParam::new(
+                "Crossfeed Distance",
                 1.0,
                 FloatRange::Linear {
                     min: -0.25,
@@ -164,8 +182,8 @@ impl Plugin for SOC {
             OutputMode::RightRight => right_right(buffer),
             OutputMode::Crossfeed => crossfeed(
                 buffer,
-                self.params.cf_level.value(),
-                self.params.cf_delay.value(),
+                self.cf.level,
+                self.cf.delay,
                 // self.del_buf,
             ),
             OutputMode::Balance => balance(buffer, self.params.balance.value()),
