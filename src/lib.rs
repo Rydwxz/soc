@@ -212,6 +212,6 @@ impl Vst3Plugin for SOC {
     const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] =
         &[Vst3SubCategory::Fx, Vst3SubCategory::Tools];
 }
-fn fun_func() {}
+
 nih_export_clap!(SOC);
 nih_export_vst3!(SOC);
